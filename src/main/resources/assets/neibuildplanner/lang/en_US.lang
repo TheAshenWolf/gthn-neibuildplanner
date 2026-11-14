@@ -1,0 +1,19 @@
+neibuildplanner.tooltip.preferred=Preferred in multiblock previews (Alt+F)
+
+neibuildplanner.chat.stack_line=  %sx %s
+neibuildplanner.chat.more=  ...and %s more
+neibuildplanner.chat.pull_cancelled=Nothing pulled: %s item type(s) missing.
+neibuildplanner.chat.preferred_added=Multiblock previews now prefer %s.
+neibuildplanner.chat.preferred_removed=%s is no longer preferred.
+neibuildplanner.chat.group_added=Bookmarked %s as a new group.
+neibuildplanner.chat.craft_no_terminal=Open an AE2 terminal to request crafts.
+neibuildplanner.chat.craft_nothing=Nothing to craft: everything is in storage, or nothing missing has a pattern.
+neibuildplanner.chat.craft_started=Requesting %s craft(s). Confirm or cancel each one; Cancel stops the chain.
+neibuildplanner.chat.craft_failed=Could not start the craft requests (NEE changed?). See the log.
+
+neibuildplanner.planner.button=Build planner: hatch counts and bookmark
+neibuildplanner.planner.hatches=Hatches (scroll or click -/+, Shift = 10)
+neibuildplanner.planner.dot=Dot %s
+neibuildplanner.planner.materials=Materials
+neibuildplanner.planner.bookmark=Bookmark
+neibuildplanner.planner.reset=Reset
