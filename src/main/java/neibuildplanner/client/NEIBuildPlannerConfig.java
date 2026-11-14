@@ -9,7 +9,9 @@ public class NEIBuildPlannerConfig implements IConfigureNEI {
 
     @Override
     public void loadConfig() {
-        GuiContainerManager.addInputHandler(new PlannerInputHandler());
+        final PlannerInputHandler handler = new PlannerInputHandler();
+        GuiContainerManager.addInputHandler(handler);
+        GuiContainerManager.addTooltipHandler(handler);
     }
 
     @Override

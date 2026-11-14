@@ -1,12 +1,16 @@
 package neibuildplanner.client;
 
+import java.util.Map;
+
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.StatCollector;
 
 import codechicken.nei.KeyManager;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerInputHandler;
+import codechicken.nei.guihook.IContainerTooltipHandler;
 import neibuildplanner.client.bookmark.BookmarkActions;
 import neibuildplanner.client.planner.PreviewAccess;
 
@@ -19,7 +23,7 @@ import neibuildplanner.client.planner.PreviewAccess;
  * <li>Alt + craft key (C) over a bookmark group, in an AE2 terminal: request autocrafts for the group.</li>
  * </ul>
  */
-public class PlannerInputHandler implements IContainerInputHandler {
+public class PlannerInputHandler implements IContainerInputHandler, IContainerTooltipHandler {
 
     @Override
     public boolean keyTyped(GuiContainer gui, char keyChar, int keyCode) {
@@ -40,6 +44,36 @@ public class PlannerInputHandler implements IContainerInputHandler {
         }
 
         return false;
+    }
+
+    /** Lines for NEI's hold-Alt hotkey list in the tooltip. */
+    @Override
+    public Map<String, String> handleHotkeys(GuiContainer gui, int mousex, int mousey, Map<String, String> hotkeys) {
+        if (BookmarkActions.canRequestGroupCrafts(gui)) {
+            hotkeys.put(altKeyName("gui.craft_items"), translate("neibuildplanner.hotkey.craft_group"));
+        }
+
+        final ItemStack hovered = GuiContainerManager.getStackMouseOver(gui);
+
+        if (hovered != null) {
+            hotkeys.put(altKeyName("bookmark.add"), translate("neibuildplanner.hotkey.add_bookmark"));
+            hotkeys.put(
+                altKeyName("bookmark.favorite"),
+                translate(
+                    PreferredBlocks.contains(hovered) ? "neibuildplanner.hotkey.unprefer"
+                        : "neibuildplanner.hotkey.prefer"));
+        }
+
+        return hotkeys;
+    }
+
+    /** "Alt + C" style name for an NEI binding, or null when it is unbound (NEI drops null entries). */
+    private static String altKeyName(String neiKey) {
+        return KeyManager.getKeyName(neiKey, NEIClientUtils.ALT_HASH);
+    }
+
+    private static String translate(String key) {
+        return StatCollector.translateToLocal(key);
     }
 
     private static boolean matches(String neiKey, int keyCode) {

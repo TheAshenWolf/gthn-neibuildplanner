@@ -16,6 +16,7 @@ NotEnoughEnergistics 1.7.50 and AE2 rv3-beta-1095.
 | **V / Shift + V** | Bookmark pulls | All or nothing: if storage can't cover every item, nothing is pulled and the missing items are listed in chat. |
 
 The keys follow NEI's own bindings (bookmark, favorite, craft); rebinding those in Controls moves the Alt variants too.
+Holding Alt shows them in NEI's tooltip hotkey list (Alt+C only over a bookmark group while an AE2 terminal is open).
 
 ## Config
 

@@ -1,5 +1,6 @@
 package neibuildplanner.client.ae2;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -18,6 +19,8 @@ public final class TerminalStorage {
 
     private static final String NEE_GUI_UTILS = "com.github.vfyjxf.nee.utils.GuiUtils";
     private static Boolean available;
+    private static WeakReference<GuiContainer> lastCheckedGui = new WeakReference<GuiContainer>(null);
+    private static boolean lastCheckedIsTerminal;
 
     private TerminalStorage() {}
 
@@ -35,7 +38,17 @@ public final class TerminalStorage {
     }
 
     public static boolean isTerminal(GuiContainer gui) {
-        return NeeBridge.getItemRepo(gui) != null;
+        if (gui == null) {
+            return false;
+        }
+
+        // Hotkey hints ask every frame while Alt is held, and the lookup walks the class hierarchy by reflection.
+        if (lastCheckedGui.get() != gui) {
+            lastCheckedGui = new WeakReference<GuiContainer>(gui);
+            lastCheckedIsTerminal = NeeBridge.getItemRepo(gui) != null;
+        }
+
+        return lastCheckedIsTerminal;
     }
 
     public static ItemStackAmount read(GuiContainer gui) {

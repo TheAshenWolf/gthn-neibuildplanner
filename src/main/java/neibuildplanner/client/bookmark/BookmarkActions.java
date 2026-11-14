@@ -17,6 +17,7 @@ import codechicken.nei.recipe.GuiRecipe;
 import codechicken.nei.recipe.chain.RecipeChainMath;
 import neibuildplanner.client.ChatMessages;
 import neibuildplanner.client.ae2.GroupCraftRequester;
+import neibuildplanner.client.ae2.TerminalStorage;
 
 public final class BookmarkActions {
 
@@ -83,15 +84,25 @@ public final class BookmarkActions {
         }
 
         final ItemStackAmount required = GroupRequirements.of(math);
-        GuiContainer terminal = gui;
+        final GuiContainer terminal = underlyingContainer(gui);
 
-        if (gui instanceof GuiRecipe) {
+        if (terminal != gui) {
             // A recipe page opened from the terminal: go back to the terminal first, as NEE does for Ctrl+click.
-            terminal = ((GuiRecipe<?>) gui).firstGui;
             gui.mc.displayGuiScreen(terminal);
         }
 
         GroupCraftRequester.request(terminal, required);
         return true;
+    }
+
+    /** The container a recipe page was opened from, or the GUI itself. */
+    public static GuiContainer underlyingContainer(GuiContainer gui) {
+        return gui instanceof GuiRecipe ? ((GuiRecipe<?>) gui).firstGui : gui;
+    }
+
+    /** True when Alt+C would request crafts: a bookmark group is hovered and an AE2 terminal is behind the GUI. */
+    public static boolean canRequestGroupCrafts(GuiContainer gui) {
+        return hoveredGroupId() >= 0 && TerminalStorage.isAvailable()
+            && TerminalStorage.isTerminal(underlyingContainer(gui));
     }
 }

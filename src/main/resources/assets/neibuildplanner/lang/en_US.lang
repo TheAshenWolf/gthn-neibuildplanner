@@ -11,6 +11,11 @@ neibuildplanner.chat.craft_nothing=Nothing to craft: everything is in storage, o
 neibuildplanner.chat.craft_started=Requesting %s craft(s). Confirm or cancel each one; Cancel stops the chain.
 neibuildplanner.chat.craft_failed=Could not start the craft requests (NEE changed?). See the log.
 
+neibuildplanner.hotkey.craft_group=Request AE2 crafts for this group
+neibuildplanner.hotkey.add_bookmark=Add bookmark (keeps existing)
+neibuildplanner.hotkey.prefer=Prefer in multiblock previews
+neibuildplanner.hotkey.unprefer=Stop preferring in multiblock previews
+
 neibuildplanner.planner.button=Build planner: hatch counts and bookmark
 neibuildplanner.planner.hatches=Hatches (scroll or click -/+, Shift = 10)
 neibuildplanner.planner.dot=Dot %s
