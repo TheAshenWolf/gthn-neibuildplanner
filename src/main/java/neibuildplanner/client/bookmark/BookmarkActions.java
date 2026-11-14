@@ -83,6 +83,11 @@ public final class BookmarkActions {
             return false;
         }
 
+        if (!TerminalStorage.isAvailable()) {
+            ChatMessages.send("neibuildplanner.chat.craft_no_terminal");
+            return true;
+        }
+
         final ItemStackAmount required = GroupRequirements.of(math);
         final GuiContainer terminal = underlyingContainer(gui);
 

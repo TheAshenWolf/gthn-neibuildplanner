@@ -8,7 +8,10 @@ neibuildplanner.chat.preferred_removed=%s is no longer preferred.
 neibuildplanner.chat.group_added=Bookmarked %s as a new group.
 neibuildplanner.chat.craft_no_terminal=Open an AE2 terminal to request crafts.
 neibuildplanner.chat.craft_nothing=Nothing to craft: everything is in storage, or nothing missing has a pattern.
-neibuildplanner.chat.craft_started=Requesting %s craft(s). Confirm or cancel each one; Cancel stops the chain.
+neibuildplanner.chat.craft_started=Requesting %s craft(s). Start = craft it, Cancel = skip it, Esc = stop all.
+neibuildplanner.chat.craft_done=Done: %s started, %s skipped.
+neibuildplanner.chat.craft_stopped=Stopped: %s started, %s not requested.
+neibuildplanner.chat.craft_skipped=Skipped: %s
 neibuildplanner.chat.craft_failed=Could not start the craft requests (NEE changed?). See the log.
 
 neibuildplanner.hotkey.craft_group=Request AE2 crafts for this group

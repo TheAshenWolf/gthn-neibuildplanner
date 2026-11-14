@@ -12,7 +12,7 @@ NotEnoughEnergistics 1.7.50 and AE2 rv3-beta-1095.
 | **Alt + F** | Hover any item (item list, bookmarks, recipe page, preview candidates) | Toggles "preferred in multiblock previews". The preview uses preferred items wherever a position accepts them: hatches, busses, glass, coils. Earlier preferences win. |
 | **B** button | Under the multiblock preview | Opens the build planner: scroll over a hatch (or click - / +, Shift = 10) to change its count; that dot group's casing count moves the other way. **Bookmark** adds the material list (controller, hatches, blocks) as a new bookmark group. |
 | **Alt + A** | Hover an item | Adds a bookmark without NEI's toggle, so the same item can be bookmarked again. |
-| **Alt + C** | Hover a bookmark group, in an AE2 terminal | Requests autocrafts for everything the group needs that is missing and has a pattern, one confirmation screen at a time (NEE's request chain). Cancel stops the chain. |
+| **Alt + C** | Hover a bookmark group, in an AE2 terminal | Requests autocrafts for everything the group needs that is missing and has a pattern, one confirmation screen at a time. Start crafts it, Cancel skips it (AE2 bookmarks what was missing), Esc stops the chain. Chat sums up what started and what was skipped. |
 | **V / Shift + V** | Bookmark pulls | All or nothing: if storage can't cover every item, nothing is pulled and the missing items are listed in chat. |
 
 The keys follow NEI's own bindings (bookmark, favorite, craft); rebinding those in Controls moves the Alt variants too.
