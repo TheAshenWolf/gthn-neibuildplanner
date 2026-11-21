@@ -17,6 +17,7 @@ import net.minecraftforge.common.MinecraftForge;
 
 import com.github.vfyjxf.nee.network.NEENetworkHandler;
 import com.github.vfyjxf.nee.network.packet.PacketCraftingRequest;
+import com.github.vfyjxf.nee.utils.Ingredient;
 import com.github.vfyjxf.nee.utils.IngredientTracker;
 
 import appeng.api.storage.data.IAEStack;
@@ -83,10 +84,19 @@ public final class GroupCraftRequester {
             return;
         }
 
+        final ItemStackAmount noPattern = new ItemStackAmount();
+
         try {
             terminalModId = findTerminalModId(terminalGui.inventorySlots);
             final IngredientTracker tracker = new IngredientTracker(terminalGui, new StackListHandler(items), 0);
             queue.addAll(tracker.getRequireStacks());
+
+            for (Ingredient ingredient : tracker.getIngredients()) {
+                // Short after storage and inventory, and AE2 has no pattern for it: nothing to request.
+                if (ingredient.requiresToCraft() && !ingredient.isCraftable()) {
+                    noPattern.add(ingredient.getIngredient().item, ingredient.getMissingCount());
+                }
+            }
         } catch (Exception exception) {
             NEIBuildPlanner.LOG.error("Could not work out which items to request from AE2", exception);
             ChatMessages.send("neibuildplanner.chat.craft_failed");
@@ -100,8 +110,15 @@ public final class GroupCraftRequester {
             return;
         }
 
+        if (!noPattern.isEmpty()) {
+            ChatMessages.send("neibuildplanner.chat.craft_no_pattern", noPattern.size());
+            ChatMessages.sendStackList(noPattern);
+        }
+
         if (queue.isEmpty()) {
-            ChatMessages.send("neibuildplanner.chat.craft_nothing");
+            ChatMessages.send(
+                noPattern.isEmpty() ? "neibuildplanner.chat.craft_nothing"
+                    : "neibuildplanner.chat.craft_nothing_with_pattern");
             return;
         }
 

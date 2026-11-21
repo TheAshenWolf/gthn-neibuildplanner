@@ -12,11 +12,13 @@ NotEnoughEnergistics 1.7.50 and AE2 rv3-beta-1095.
 | **Alt + F** | Hover any item (item list, bookmarks, recipe page, preview candidates) | Toggles "preferred in multiblock previews". The preview uses preferred items wherever a position accepts them: hatches, busses, glass, coils. Earlier preferences win. |
 | **B** button | Under the multiblock preview | Opens the build planner: scroll over a hatch (or click - / +, Shift = 10) to change its count; that dot group's casing count moves the other way. **Bookmark** adds the material list (controller, hatches, blocks) as a new bookmark group. |
 | **Alt + A** | Hover an item | Adds a bookmark without NEI's toggle, so the same item can be bookmarked again. |
-| **Alt + C** | Hover a bookmark group, in an AE2 terminal | Requests autocrafts for everything the group needs that is missing and has a pattern, one confirmation screen at a time. Start crafts it, Cancel skips it (AE2 bookmarks what was missing), Esc stops the chain. Chat sums up what started and what was skipped. |
+| **Alt + C** | Hover a bookmark group, in an AE2 terminal | Requests autocrafts for everything the group needs that is missing and has a pattern, one confirmation screen at a time. Start crafts it, Cancel skips it (AE2 bookmarks what was missing), Esc stops the chain. Chat lists the missing items that have no pattern up front, and sums up what started and what was skipped at the end. |
 | **V / Shift + V** | Bookmark pulls | All or nothing: if storage can't cover every item, nothing is pulled and the missing items are listed in chat. |
+| **Alt + V / Alt + Shift + V** | Bookmark pulls | Same pulls without the all-or-nothing check, for when you want what's there. |
 
 The keys follow NEI's own bindings (bookmark, favorite, craft); rebinding those in Controls moves the Alt variants too.
-Holding Alt shows them in NEI's tooltip hotkey list (Alt+C only over a bookmark group while an AE2 terminal is open).
+Holding Alt shows them in NEI's tooltip hotkey list (Alt+C only over a bookmark group while an AE2 terminal is open;
+Alt+V only where NEI can pull and `allOrNothing` is on).
 
 ## Config
 

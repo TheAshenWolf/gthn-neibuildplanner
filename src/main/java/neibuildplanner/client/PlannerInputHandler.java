@@ -6,6 +6,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.StatCollector;
 
+import codechicken.nei.BookmarkContainerInfo;
 import codechicken.nei.KeyManager;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -22,6 +23,8 @@ import neibuildplanner.client.planner.PreviewAccess;
  * <li>Alt + favorite key (F): toggle "preferred in multiblock previews".</li>
  * <li>Alt + craft key (C) over a bookmark group, in an AE2 terminal: request autocrafts for the group.</li>
  * </ul>
+ * Alt + pull key (V) is not handled here: NEI's pull ignores modifiers and {@code PullGuard} lets it through when Alt
+ * is held. This class only adds its hint.
  */
 public class PlannerInputHandler implements IContainerInputHandler, IContainerTooltipHandler {
 
@@ -54,6 +57,14 @@ public class PlannerInputHandler implements IContainerInputHandler, IContainerTo
         }
 
         final ItemStack hovered = GuiContainerManager.getStackMouseOver(gui);
+
+        if (PlannerConfig.pullAllOrNothing && BookmarkContainerInfo.getBookmarkContainerHandler(gui) != null
+            && (hovered != null || BookmarkActions.hoveredGroupId() >= 0)) {
+            hotkeys.put(altKeyName("bookmark.pull_items"), translate("neibuildplanner.hotkey.pull_partial"));
+            hotkeys.put(
+                KeyManager.getKeyName("bookmark.pull_items", NEIClientUtils.ALT_HASH | NEIClientUtils.SHIFT_HASH),
+                translate("neibuildplanner.hotkey.pull_missing_partial"));
+        }
 
         if (hovered != null) {
             hotkeys.put(altKeyName("bookmark.add"), translate("neibuildplanner.hotkey.add_bookmark"));

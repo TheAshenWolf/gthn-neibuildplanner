@@ -4,6 +4,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 
 import codechicken.nei.BookmarkContainerInfo;
 import codechicken.nei.ItemStackAmount;
+import codechicken.nei.KeyManager;
 import codechicken.nei.NEIClientUtils;
 import codechicken.nei.api.IBookmarkContainerHandler;
 import codechicken.nei.recipe.chain.RecipeChainMath;
@@ -18,9 +19,12 @@ public final class PullGuard {
 
     private PullGuard() {}
 
-    /** @return true when the pull must be cancelled. */
+    /**
+     * @return true when the pull must be cancelled. Holding Alt (Alt+V / Alt+Shift+V) skips the check for that one
+     *         pull: NEI's pull key ignores modifiers, so the pull itself still runs.
+     */
     public static boolean shouldCancel(RecipeChainMath math, boolean missingOnly) {
-        if (!PlannerConfig.pullAllOrNothing || math == null) {
+        if (!PlannerConfig.pullAllOrNothing || math == null || NEIClientUtils.altKey()) {
             return false;
         }
 
@@ -47,7 +51,10 @@ public final class PullGuard {
         }
 
         if (PlannerConfig.pullMissingChatMessage) {
-            ChatMessages.send("neibuildplanner.chat.pull_cancelled", missing.size());
+            ChatMessages.send(
+                "neibuildplanner.chat.pull_cancelled",
+                missing.size(),
+                KeyManager.getKeyName("bookmark.pull_items", NEIClientUtils.ALT_HASH));
             ChatMessages.sendStackList(missing);
         }
 

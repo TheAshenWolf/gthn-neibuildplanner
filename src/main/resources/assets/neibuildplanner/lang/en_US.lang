@@ -2,12 +2,14 @@ neibuildplanner.tooltip.preferred=Preferred in multiblock previews (Alt+F)
 
 neibuildplanner.chat.stack_line=  %sx %s
 neibuildplanner.chat.more=  ...and %s more
-neibuildplanner.chat.pull_cancelled=Nothing pulled: %s item type(s) missing.
+neibuildplanner.chat.pull_cancelled=Nothing pulled: %s item type(s) missing. %s pulls what is there.
 neibuildplanner.chat.preferred_added=Multiblock previews now prefer %s.
 neibuildplanner.chat.preferred_removed=%s is no longer preferred.
 neibuildplanner.chat.group_added=Bookmarked %s as a new group.
 neibuildplanner.chat.craft_no_terminal=Open an AE2 terminal to request crafts.
-neibuildplanner.chat.craft_nothing=Nothing to craft: everything is in storage, or nothing missing has a pattern.
+neibuildplanner.chat.craft_nothing=Nothing to craft: everything is in storage.
+neibuildplanner.chat.craft_nothing_with_pattern=Nothing to request: the rest is in storage.
+neibuildplanner.chat.craft_no_pattern=No pattern, not requested (%s):
 neibuildplanner.chat.craft_started=Requesting %s craft(s). Start = craft it, Cancel = skip it, Esc = stop all.
 neibuildplanner.chat.craft_done=Done: %s started, %s skipped.
 neibuildplanner.chat.craft_stopped=Stopped: %s started, %s not requested.
@@ -16,6 +18,8 @@ neibuildplanner.chat.craft_failed=Could not start the craft requests (NEE change
 
 neibuildplanner.hotkey.craft_group=Request AE2 crafts for this group
 neibuildplanner.hotkey.add_bookmark=Add bookmark (keeps existing)
+neibuildplanner.hotkey.pull_partial=Pull all items, even if some are missing
+neibuildplanner.hotkey.pull_missing_partial=Pull missing items, even if some are missing
 neibuildplanner.hotkey.prefer=Prefer in multiblock previews
 neibuildplanner.hotkey.unprefer=Stop preferring in multiblock previews
 
