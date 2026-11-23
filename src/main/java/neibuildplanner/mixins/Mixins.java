@@ -22,7 +22,10 @@ public enum Mixins implements IMixins {
         .addRequiredMod(TargetMods.NEI)
         .addRequiredMod(TargetMods.BLOCK_RENDERER)
         .addRequiredMod(TargetMods.GREGTECH)
-        .addClientMixins("AccessorGTGuiMultiblockHandler"));
+        .addClientMixins("AccessorGTGuiMultiblockHandler")),
+    PREVIEW_CHANNEL_HATCHES(new MixinBuilder().setPhase(Phase.LATE)
+        .addRequiredMod(TargetMods.BLOCK_RENDERER)
+        .addClientMixins("MixinStructureHacks"));
 
     private final MixinBuilder builder;
 

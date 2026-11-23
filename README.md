@@ -31,6 +31,13 @@ Alt+V only where NEI can pull and `allOrNothing` is on).
 Preferred items are stored in `config/neibuildplanner-preferred.txt`, one item per line.
 Hatch picks from the planner are stored in `config/neibuildplanner-overrides.txt`.
 
+## Preview fix
+
+BlockRenderer doesn't find hatch positions inside StructureLib channel wrappers, so multiblocks that wrap their
+hatch-capable casing in a channel (the Precise Assembler) show no hint dots and the planner has no hatch rows. The addon
+looks inside the wrapper only when BlockRenderer's own lookup finds nothing, so it steps aside once BlockRenderer
+handles this itself.
+
 ## Build
 
 ```bash
