@@ -8,6 +8,7 @@ dependencies {
     compileOnly("com.github.GTNewHorizons:GT5-Unofficial:5.09.54.265:dev") { transitive = false }
     compileOnly("com.github.GTNewHorizons:NotEnoughEnergistics:1.7.50:dev") { transitive = false }
     compileOnly("com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-1095-GTNH:dev") { transitive = false }
+    compileOnly("com.github.GTNewHorizons:ModularUI2:2.3.94-1.7.10:dev") { transitive = false }
 }
 
 // Smoke-test client: just enough to load the patched classes (no GregTech).

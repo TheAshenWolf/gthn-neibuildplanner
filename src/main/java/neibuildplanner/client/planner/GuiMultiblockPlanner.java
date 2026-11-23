@@ -21,6 +21,7 @@ import org.lwjgl.opengl.GL12;
 import blockrenderer6343.client.renderer.ImmediateWorldSceneRenderer;
 import blockrenderer6343.integration.nei.GuiMultiblockHandler;
 import codechicken.nei.ItemStackAmount;
+import codechicken.nei.recipe.StackInfo;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import neibuildplanner.client.bookmark.BookmarkActions;
 import neibuildplanner.mixins.late.AccessorGTGuiMultiblockHandler;
@@ -66,6 +67,10 @@ public class GuiMultiblockPlanner extends GuiScreen {
         }
     }
 
+    private static final int CELL_SIZE = 18;
+    private static final int PICKER_MAX_COLUMNS = 12;
+    private static final int PICKER_TITLE_HEIGHT = 14;
+
     private final GuiScreen parent;
     private final MultiblockPlan plan;
     private final List<Row> rows = new ArrayList<Row>();
@@ -75,6 +80,10 @@ public class GuiMultiblockPlanner extends GuiScreen {
     private int listTop;
     private int listBottom;
     private int scrollRows;
+    /** The hatch row being swapped, or null when the picker is closed. */
+    private MultiblockPlan.HatchRow pickerRow;
+    private List<ItemStack> pickerCandidates = Collections.emptyList();
+    private int pickerScrollRows;
 
     public GuiMultiblockPlanner(GuiScreen parent, MultiblockPlan plan) {
         this.parent = parent;
@@ -209,7 +218,11 @@ public class GuiMultiblockPlanner extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) {
         if (keyCode == Keyboard.KEY_ESCAPE || keyCode == mc.gameSettings.keyBindInventory.getKeyCode()) {
-            mc.displayGuiScreen(parent);
+            if (pickerRow != null) {
+                closePicker();
+            } else {
+                mc.displayGuiScreen(parent);
+            }
         }
     }
 
@@ -224,8 +237,15 @@ public class GuiMultiblockPlanner extends GuiScreen {
 
         final int mouseX = Mouse.getEventX() * width / mc.displayWidth;
         final int mouseY = height - Mouse.getEventY() * height / mc.displayHeight - 1;
-        final Row row = rowAt(mouseX, mouseY);
         final int direction = wheel > 0 ? 1 : -1;
+
+        if (pickerRow != null) {
+            final int hiddenRows = pickerTotalRows() - pickerVisibleRows();
+            pickerScrollRows = Math.max(0, Math.min(pickerScrollRows - direction, hiddenRows));
+            return;
+        }
+
+        final Row row = rowAt(mouseX, mouseY);
 
         if (row != null && row.kind == RowKind.HATCH) {
             changeHatch(row.hatch, direction);
@@ -236,10 +256,33 @@ public class GuiMultiblockPlanner extends GuiScreen {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) {
+        if (pickerRow != null) {
+            // The picker sits over the list and buttons, so clicks never reach them while it is open.
+            pickerClicked(mouseX, mouseY, button);
+            return;
+        }
+
         super.mouseClicked(mouseX, mouseY, button);
         final Row row = rowAt(mouseX, mouseY);
 
-        if (button != 0 || row == null || row.kind != RowKind.HATCH) {
+        if (row == null || row.kind != RowKind.HATCH) {
+            return;
+        }
+
+        final int left = panelLeft + PADDING;
+
+        if (mouseX >= left && mouseX < left + CELL_SIZE) {
+            if (button == 0) {
+                openPicker(row.hatch);
+            } else if (button == 1) {
+                plan.clearOverride(row.hatch);
+                rebuildRows();
+            }
+
+            return;
+        }
+
+        if (button != 0) {
             return;
         }
 
@@ -250,6 +293,99 @@ public class GuiMultiblockPlanner extends GuiScreen {
         } else if (mouseX >= countRight - COUNT_BOX_WIDTH * 2 - 30 && mouseX < countRight - COUNT_BOX_WIDTH - 30) {
             changeHatch(row.hatch, -1);
         }
+    }
+
+    private void openPicker(MultiblockPlan.HatchRow hatch) {
+        final List<ItemStack> candidates = HatchCatalog.candidates(hatch.family);
+
+        if (candidates.size() < 2) {
+            return; // Nothing to swap to (or not a hatch the picker knows).
+        }
+
+        pickerRow = hatch;
+        pickerCandidates = candidates;
+        pickerScrollRows = 0;
+
+        // Start scrolled to the current hatch.
+        for (int i = 0, count = candidates.size(); i < count; i++) {
+            if (StackInfo.equalItemAndNBT(candidates.get(i), hatch.stack, true)) {
+                pickerScrollRows = Math.max(0, Math.min(i / pickerColumns(), pickerTotalRows() - pickerVisibleRows()));
+                break;
+            }
+        }
+    }
+
+    private void closePicker() {
+        pickerRow = null;
+        pickerCandidates = Collections.emptyList();
+    }
+
+    private void pickerClicked(int mouseX, int mouseY, int button) {
+        final int index = pickerIndexAt(mouseX, mouseY);
+
+        if (button == 0 && index >= 0) {
+            plan.overrideHatch(pickerRow, pickerCandidates.get(index));
+            closePicker();
+            rebuildRows();
+        } else if (!insidePicker(mouseX, mouseY)) {
+            closePicker();
+        }
+    }
+
+    private int pickerColumns() {
+        return Math.max(1, Math.min(PICKER_MAX_COLUMNS, (panelWidth - PADDING * 4) / CELL_SIZE));
+    }
+
+    private int pickerTotalRows() {
+        final int columns = pickerColumns();
+        return (pickerCandidates.size() + columns - 1) / columns;
+    }
+
+    private int pickerVisibleRows() {
+        final int available = (listBottom - listTop - PICKER_TITLE_HEIGHT - PADDING * 2) / CELL_SIZE;
+        return Math.max(1, Math.min(pickerTotalRows(), available));
+    }
+
+    private int pickerWidth() {
+        return pickerColumns() * CELL_SIZE + PADDING * 2;
+    }
+
+    private int pickerHeight() {
+        return PICKER_TITLE_HEIGHT + pickerVisibleRows() * CELL_SIZE + PADDING * 2;
+    }
+
+    private int pickerLeft() {
+        return (width - pickerWidth()) / 2;
+    }
+
+    private int pickerTop() {
+        return listTop + (listBottom - listTop - pickerHeight()) / 2;
+    }
+
+    private boolean insidePicker(int mouseX, int mouseY) {
+        return mouseX >= pickerLeft() && mouseX < pickerLeft() + pickerWidth()
+            && mouseY >= pickerTop()
+            && mouseY < pickerTop() + pickerHeight();
+    }
+
+    /** @return the candidate index under the mouse, or -1. */
+    private int pickerIndexAt(int mouseX, int mouseY) {
+        final int gridLeft = pickerLeft() + PADDING;
+        final int gridTop = pickerTop() + PADDING + PICKER_TITLE_HEIGHT;
+
+        if (mouseX < gridLeft || mouseY < gridTop) {
+            return -1;
+        }
+
+        final int column = (mouseX - gridLeft) / CELL_SIZE;
+        final int visibleRow = (mouseY - gridTop) / CELL_SIZE;
+
+        if (column >= pickerColumns() || visibleRow >= pickerVisibleRows()) {
+            return -1;
+        }
+
+        final int index = (pickerScrollRows + visibleRow) * pickerColumns() + column;
+        return index < pickerCandidates.size() ? index : -1;
     }
 
     private void changeHatch(MultiblockPlan.HatchRow hatch, int direction) {
@@ -276,7 +412,7 @@ public class GuiMultiblockPlanner extends GuiScreen {
         final ItemStackAmount preview = plan.previewTotals();
         final ItemStackAmount planned = plan.plannedTotals();
         final int visible = visibleRowCount();
-        ItemStack hoveredStack = null;
+        Row hoveredRow = null;
 
         for (int i = 0; i < visible; i++) {
             final int index = scrollRows + i;
@@ -292,7 +428,7 @@ public class GuiMultiblockPlanner extends GuiScreen {
                 && mouseY < y + ROW_HEIGHT
                 && mouseX >= panelLeft + PADDING
                 && mouseX < panelLeft + panelWidth - PADDING) {
-                hoveredStack = row.stack;
+                hoveredRow = row;
             }
         }
 
@@ -306,8 +442,107 @@ public class GuiMultiblockPlanner extends GuiScreen {
 
         super.drawScreen(mouseX, mouseY, partialTicks);
 
-        if (hoveredStack != null) {
-            renderToolTip(hoveredStack, mouseX, mouseY);
+        if (pickerRow != null) {
+            drawPicker(mouseX, mouseY);
+        } else if (hoveredRow != null) {
+            drawRowTooltip(hoveredRow, mouseX, mouseY);
+        }
+    }
+
+    private void drawRowTooltip(Row row, int mouseX, int mouseY) {
+        final List<String> lines = itemTooltip(row.stack);
+
+        if (row.kind == RowKind.HATCH && row.hatch.family != null) {
+            if (row.hatch.overridden) {
+                lines.add(EnumChatFormatting.AQUA + I18n.format("neibuildplanner.planner.overridden"));
+            }
+
+            if (HatchCatalog.candidates(row.hatch.family)
+                .size() > 1) {
+                lines.add(EnumChatFormatting.DARK_GRAY + I18n.format("neibuildplanner.planner.pick_hint"));
+            }
+        }
+
+        drawHoveringText(lines, mouseX, mouseY, fontRendererObj);
+    }
+
+    /** The stack's normal tooltip, coloured the way vanilla's renderToolTip does. */
+    private List<String> itemTooltip(ItemStack stack) {
+        final List<String> tooltip = stack.getTooltip(mc.thePlayer, mc.gameSettings.advancedItemTooltips);
+        final List<String> lines = new ArrayList<String>();
+
+        for (int i = 0, count = tooltip.size(); i < count; i++) {
+            lines.add(
+                i == 0 ? stack.getRarity().rarityColor + tooltip.get(i) : EnumChatFormatting.GRAY + tooltip.get(i));
+        }
+
+        return lines;
+    }
+
+    private void drawPicker(int mouseX, int mouseY) {
+        final int left = pickerLeft();
+        final int top = pickerTop();
+        final int columns = pickerColumns();
+        final int visibleRows = pickerVisibleRows();
+        final int gridLeft = left + PADDING;
+        final int gridTop = top + PADDING + PICKER_TITLE_HEIGHT;
+
+        // Push the overlay above the item icons of the list underneath.
+        GL11.glPushMatrix();
+        GL11.glTranslatef(0, 0, 300);
+        drawRect(panelLeft, panelTop, panelLeft + panelWidth, height - 10, 0xA0000000);
+        drawRect(left - 1, top - 1, left + pickerWidth() + 1, top + pickerHeight() + 1, 0xFF808080);
+        drawRect(left, top, left + pickerWidth(), top + pickerHeight(), 0xF0181818);
+        final String title = fontRendererObj
+            .trimStringToWidth(I18n.format("neibuildplanner.planner.pick_title"), pickerWidth() - PADDING * 2);
+        fontRendererObj.drawStringWithShadow(title, gridLeft, top + PADDING, 0xFFD700);
+        GL11.glPopMatrix();
+
+        final int hoveredIndex = pickerIndexAt(mouseX, mouseY);
+
+        for (int visibleRow = 0; visibleRow < visibleRows; visibleRow++) {
+            for (int column = 0; column < columns; column++) {
+                final int index = (pickerScrollRows + visibleRow) * columns + column;
+
+                if (index >= pickerCandidates.size()) {
+                    break;
+                }
+
+                final ItemStack candidate = pickerCandidates.get(index);
+                final int x = gridLeft + column * CELL_SIZE;
+                final int y = gridTop + visibleRow * CELL_SIZE;
+                final boolean current = StackInfo.equalItemAndNBT(candidate, pickerRow.stack, true);
+
+                if (current || index == hoveredIndex) {
+                    GL11.glPushMatrix();
+                    GL11.glTranslatef(0, 0, 300);
+                    drawRect(x, y, x + CELL_SIZE, y + CELL_SIZE, current ? 0x8055FF55 : 0x60FFFFFF);
+                    GL11.glPopMatrix();
+                }
+
+                zLevel = 300;
+                itemRender.zLevel = 300;
+                drawItem(candidate, x + 1, y + 1);
+                itemRender.zLevel = 0;
+                zLevel = 0;
+            }
+        }
+
+        GL11.glPushMatrix();
+        GL11.glTranslatef(0, 0, 400);
+
+        if (pickerScrollRows > 0) {
+            drawCenteredString(fontRendererObj, "▲", left + pickerWidth() - 5, top + PADDING, 0xAAAAAA);
+        }
+
+        if (pickerScrollRows + visibleRows < pickerTotalRows()) {
+            drawCenteredString(fontRendererObj, "▼", left + pickerWidth() - 5, top + pickerHeight() - 10, 0xAAAAAA);
+        }
+
+        GL11.glPopMatrix();
+
+        if (hoveredIndex >= 0) {
+            drawHoveringText(itemTooltip(pickerCandidates.get(hoveredIndex)), mouseX, mouseY, fontRendererObj);
         }
     }
 
@@ -335,8 +570,13 @@ public class GuiMultiblockPlanner extends GuiScreen {
                 String.valueOf(planned),
                 right - COUNT_BOX_WIDTH - 15,
                 y + 5,
-                planned == row.hatch.placedCount ? 0xFFFFFF : 0x55FF55);
-            drawName(row.stack, left + 20, y + 5, right - COUNT_BOX_WIDTH * 2 - 34);
+                planned == row.hatch.getPlacedCount() ? 0xFFFFFF : 0x55FF55);
+            drawName(
+                row.stack,
+                left + 20,
+                y + 5,
+                right - COUNT_BOX_WIDTH * 2 - 34 - (left + 20),
+                row.hatch.overridden ? 0x55FFFF : 0xDDDDDD);
             return true;
         }
 
@@ -356,13 +596,13 @@ public class GuiMultiblockPlanner extends GuiScreen {
         final int countColor = delta == 0 ? 0xFFFFFF : delta > 0 ? 0x55FF55 : 0xFF5555;
         final int countWidth = fontRendererObj.getStringWidth(countText);
         fontRendererObj.drawStringWithShadow(countText, right - countWidth, y + 5, countColor);
-        drawName(row.stack, left + 20, y + 5, right - countWidth - 4 - (left + 20));
+        drawName(row.stack, left + 20, y + 5, right - countWidth - 4 - (left + 20), 0xDDDDDD);
         return true;
     }
 
-    private void drawName(ItemStack stack, int x, int y, int maxWidth) {
+    private void drawName(ItemStack stack, int x, int y, int maxWidth, int color) {
         final String name = fontRendererObj.trimStringToWidth(stack.getDisplayName(), Math.max(0, maxWidth));
-        fontRendererObj.drawStringWithShadow(name, x, y, 0xDDDDDD);
+        fontRendererObj.drawStringWithShadow(name, x, y, color);
     }
 
     private void drawItem(ItemStack stack, int x, int y) {

@@ -27,19 +27,46 @@ import it.unimi.dsi.fastutil.longs.LongSet;
  */
 public final class MultiblockPlan {
 
-    /** One hatch type placed in one dot group. */
+    /** One hatch type the preview placed in a dot group, before any override. */
+    private static final class PlacedHatch {
+
+        private final ItemStack stack;
+        private final int count;
+        /** {@link HatchCatalog} family, or null when the picker doesn't know this hatch. */
+        private final String family;
+        /** The row currently showing this hatch. */
+        private HatchRow row;
+
+        private PlacedHatch(ItemStack stack, int count, String family) {
+            this.stack = stack;
+            this.count = count;
+            this.family = family;
+        }
+    }
+
+    /**
+     * One hatch item in one dot group. With an override, it stands for every placed hatch of its family in the group.
+     */
     public static final class HatchRow {
 
         public final DotGroup group;
         public final ItemStack stack;
-        public final int placedCount;
+        /** {@link HatchCatalog} family, or null when the hatch can't be swapped. */
+        public final String family;
+        /** True when the item comes from a hatch override instead of the preview. */
+        public final boolean overridden;
+        private int placedCount;
         public int plannedCount;
 
-        private HatchRow(DotGroup group, ItemStack stack, int placedCount) {
+        private HatchRow(DotGroup group, ItemStack stack, String family, boolean overridden) {
             this.group = group;
             this.stack = stack;
-            this.placedCount = placedCount;
-            this.plannedCount = placedCount;
+            this.family = family;
+            this.overridden = overridden;
+        }
+
+        public int getPlacedCount() {
+            return placedCount;
         }
 
         /** @return the count actually applied, after clamping to what the dot group can hold. */
@@ -56,6 +83,7 @@ public final class MultiblockPlan {
         public final int dot;
         public final String hint;
         public final List<HatchRow> hatches = new ArrayList<HatchRow>();
+        private final List<PlacedHatch> placed = new ArrayList<PlacedHatch>();
         /** The casing that fills positions without a hatch; null if the preview placed only hatches here. */
         public ItemStack casing;
         public int placedCasingCount;
@@ -104,10 +132,12 @@ public final class MultiblockPlan {
     /** Everything outside the dot groups, controller included. */
     private final ItemStackAmount fixedBlocks = new ItemStackAmount();
     private final ItemStackAmount fixedDotBlocks = new ItemStackAmount();
+    private final String controllerKey;
 
     private MultiblockPlan(String name, ItemStack controller) {
         this.name = name;
         this.controller = controller;
+        this.controllerKey = HatchOverrides.controllerKey(controller);
     }
 
     /**
@@ -184,17 +214,97 @@ public final class MultiblockPlan {
             final ItemStackAmount hatches = entry.getValue();
 
             for (ItemStack hatch : hatches.values()) {
-                final HatchRow row = new HatchRow(group, hatch, (int) (long) hatches.get(hatch));
-                group.hatches.add(row);
-                plan.hatchRows.add(row);
+                group.placed.add(new PlacedHatch(hatch, (int) (long) hatches.get(hatch), HatchCatalog.familyOf(hatch)));
             }
 
-            if (!group.hatches.isEmpty() || group.casing != null) {
+            if (!group.placed.isEmpty() || group.casing != null) {
                 plan.dotGroups.add(group);
+                plan.rebuildHatchRows(group);
             }
         }
 
+        plan.collectHatchRows();
         return plan;
+    }
+
+    /**
+     * Swaps every hatch of the row's family in its dot group for {@code pick}, and remembers it for this multiblock.
+     */
+    public void overrideHatch(HatchRow row, ItemStack pick) {
+        if (row.family == null || pick == null) {
+            return;
+        }
+
+        HatchOverrides.set(controllerKey, row.group.dot, row.family, pick);
+        rebuildHatchRows(row.group);
+        collectHatchRows();
+    }
+
+    /** Drops the row's override, so the preview's (preferred) hatches come back. */
+    public void clearOverride(HatchRow row) {
+        if (!row.overridden) {
+            return;
+        }
+
+        HatchOverrides.set(controllerKey, row.group.dot, row.family, null);
+        rebuildHatchRows(row.group);
+        collectHatchRows();
+    }
+
+    /**
+     * Turns the group's placed hatches into rows: overridden families collapse into one row with the picked item.
+     * Planned-count changes carry over to the new rows.
+     */
+    private void rebuildHatchRows(DotGroup group) {
+        final List<HatchRow> newRows = new ArrayList<HatchRow>();
+        final List<HatchRow> carriedOldRows = new ArrayList<HatchRow>();
+
+        for (int i = 0, count = group.placed.size(); i < count; i++) {
+            final PlacedHatch placedHatch = group.placed.get(i);
+            final ItemStack override = HatchOverrides.get(controllerKey, group.dot, placedHatch.family);
+            final ItemStack shown = override == null ? placedHatch.stack : override;
+            HatchRow row = null;
+
+            for (int j = 0, rowCount = newRows.size(); j < rowCount; j++) {
+                if (StackInfo.equalItemAndNBT(newRows.get(j).stack, shown, true)) {
+                    row = newRows.get(j);
+                    break;
+                }
+            }
+
+            if (row == null) {
+                row = new HatchRow(group, shown, placedHatch.family, override != null);
+                newRows.add(row);
+            }
+
+            row.placedCount += placedHatch.count;
+            row.plannedCount += placedHatch.count;
+            final HatchRow oldRow = placedHatch.row;
+
+            // Each old row's +/- adjustment moves to the first new row that inherits one of its hatches.
+            if (oldRow != null && !carriedOldRows.contains(oldRow)) {
+                carriedOldRows.add(oldRow);
+                row.plannedCount += oldRow.plannedCount - oldRow.placedCount;
+            }
+
+            placedHatch.row = row;
+        }
+
+        for (int i = 0, count = newRows.size(); i < count; i++) {
+            final HatchRow row = newRows.get(i);
+            row.plannedCount = Math.max(0, row.plannedCount);
+        }
+
+        group.hatches.clear();
+        group.hatches.addAll(newRows);
+    }
+
+    private void collectHatchRows() {
+        hatchRows.clear();
+
+        for (int i = 0, count = dotGroups.size(); i < count; i++) {
+            hatchRows.addAll(dotGroups.get(i).hatches);
+        }
     }
 
     /** Same block-to-item conversion as BlockRenderer6343's own ingredient list. */
@@ -266,9 +376,10 @@ public final class MultiblockPlan {
                 totals.add(group.casing, (long) group.placedCasingCount);
             }
 
-            for (int j = 0, hatchCount = group.hatches.size(); j < hatchCount; j++) {
-                final HatchRow row = group.hatches.get(j);
-                totals.add(row.stack, (long) row.placedCount);
+            // What the preview actually placed, so an override shows up as a swap in the totals.
+            for (int j = 0, hatchCount = group.placed.size(); j < hatchCount; j++) {
+                final PlacedHatch placedHatch = group.placed.get(j);
+                totals.add(placedHatch.stack, (long) placedHatch.count);
             }
         }
 

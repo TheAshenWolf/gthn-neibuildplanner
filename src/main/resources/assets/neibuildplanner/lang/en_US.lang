@@ -24,7 +24,10 @@ neibuildplanner.hotkey.prefer=Prefer in multiblock previews
 neibuildplanner.hotkey.unprefer=Stop preferring in multiblock previews
 
 neibuildplanner.planner.button=Build planner: hatch counts and bookmark
-neibuildplanner.planner.hatches=Hatches (scroll or click -/+, Shift = 10)
+neibuildplanner.planner.hatches=Hatches (scroll or -/+, Shift = 10; click icon to swap)
+neibuildplanner.planner.pick_title=Pick a hatch for this multiblock
+neibuildplanner.planner.pick_hint=Click the icon to pick another hatch
+neibuildplanner.planner.overridden=Picked for this multiblock (right-click the icon to undo)
 neibuildplanner.planner.dot=Dot %s
 neibuildplanner.planner.materials=Materials
 neibuildplanner.planner.bookmark=Bookmark
