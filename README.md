@@ -13,12 +13,12 @@ NotEnoughEnergistics 1.7.50 and AE2 rv3-beta-1095.
 | **B** button | Under the multiblock preview | Opens the build planner: scroll over a hatch (or click - / +, Shift = 10) to change its count; that dot group's casing count moves the other way. **Bookmark** adds the material list (controller, hatches, blocks) as a new bookmark group. |
 | Hatch icon | In the build planner | Click to pick another hatch of the same kind (all tiers, ME and multi-fluid variants; energy rows also offer multi-amp and laser hatches). The pick replaces that kind of hatch in that dot group, overriding your preferred blocks for this multiblock only, and is remembered. Right-click the icon to undo. The picker doesn't know what a particular machine accepts. |
 | **Alt + A** | Hover an item | Adds a bookmark without NEI's toggle, so the same item can be bookmarked again. |
-| **Alt + C** | Hover a bookmark group, in an AE2 terminal | Requests autocrafts for everything the group needs that is missing and has a pattern, one confirmation screen at a time. Start crafts it, Cancel skips it (AE2 bookmarks what was missing), Esc stops the chain. Chat lists the missing items that have no pattern up front, and sums up what started and what was skipped at the end. |
+| **Alt + C** | Hover a bookmark group or an ungrouped bookmark, in an AE2 terminal | Requests autocrafts for everything the group needs (or just the ungrouped item) that is missing and has a pattern, one confirmation screen at a time. Start crafts it, Cancel skips it (AE2 bookmarks what was missing), Esc stops the chain. Chat lists the missing items that have no pattern up front, and sums up what started and what was skipped at the end. |
 | **V / Shift + V** | Bookmark pulls | All or nothing: if storage can't cover every item, nothing is pulled and the missing items are listed in chat. |
 | **Alt + V / Alt + Shift + V** | Bookmark pulls | Same pulls without the all-or-nothing check, for when you want what's there. |
 
 The keys follow NEI's own bindings (bookmark, favorite, craft); rebinding those in Controls moves the Alt variants too.
-Holding Alt shows them in NEI's tooltip hotkey list (Alt+C only over a bookmark group while an AE2 terminal is open;
+Holding Alt shows them in NEI's tooltip hotkey list (Alt+C only over a bookmark or group while an AE2 terminal is open;
 Alt+V only where NEI can pull and `allOrNothing` is on).
 
 ## Config

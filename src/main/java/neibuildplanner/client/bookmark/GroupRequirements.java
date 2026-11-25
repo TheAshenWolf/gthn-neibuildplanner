@@ -42,6 +42,13 @@ public final class GroupRequirements {
         return required;
     }
 
+    /** A single bookmark with its amount; one bookmarked without an amount counts as one. */
+    public static ItemStackAmount ofItem(BookmarkItem item, long multiplier) {
+        final ItemStackAmount required = new ItemStackAmount();
+        addItem(required, item, Math.max(1, item.getAmount(multiplier)));
+        return required;
+    }
+
     private static void addItem(ItemStackAmount required, BookmarkItem item, long amount) {
         if (amount <= 0) {
             return;

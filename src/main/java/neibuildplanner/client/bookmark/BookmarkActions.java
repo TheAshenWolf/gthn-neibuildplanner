@@ -54,19 +54,31 @@ public final class BookmarkActions {
 
     /** @return the group under the mouse in the bookmark panel, or -1. */
     public static int hoveredGroupId() {
-        final java.awt.Point mouse = GuiDraw.getMousePosition();
-
-        if (!ItemPanels.bookmarkPanel.contains(mouse.x, mouse.y)) {
-            return -1;
-        }
-
-        final BookmarksGridSlot slot = ItemPanels.bookmarkPanel.getSlotMouseOver(mouse.x, mouse.y);
+        final BookmarksGridSlot slot = hoveredSlot();
 
         if (slot != null) {
             return slot.getGroupId();
         }
 
-        return ItemPanels.bookmarkPanel.getHoveredGroupId(true);
+        final java.awt.Point mouse = GuiDraw.getMousePosition();
+        return ItemPanels.bookmarkPanel.contains(mouse.x, mouse.y) ? ItemPanels.bookmarkPanel.getHoveredGroupId(true)
+            : -1;
+    }
+
+    /**
+     * True when the mouse is on a bookmark outside any group. NEI keeps those together in its default group, but they
+     * have nothing to do with each other.
+     */
+    public static boolean isUngroupedItemHovered() {
+        final BookmarksGridSlot slot = hoveredSlot();
+        return slot != null && slot.getGroupId() == BookmarkGrid.DEFAULT_GROUP_ID;
+    }
+
+    private static BookmarksGridSlot hoveredSlot() {
+        final java.awt.Point mouse = GuiDraw.getMousePosition();
+        return ItemPanels.bookmarkPanel.contains(mouse.x, mouse.y)
+            ? ItemPanels.bookmarkPanel.getSlotMouseOver(mouse.x, mouse.y)
+            : null;
     }
 
     public static boolean requestGroupCrafts(GuiContainer gui) {
@@ -76,10 +88,9 @@ public final class BookmarkActions {
             return false;
         }
 
-        final RecipeChainMath math = ItemPanels.bookmarkPanel.getGrid()
-            .createRecipeChainMath(groupId);
+        final ItemStackAmount required = hoveredRequirements(groupId);
 
-        if (math == null) {
+        if (required == null) {
             return false;
         }
 
@@ -88,7 +99,6 @@ public final class BookmarkActions {
             return true;
         }
 
-        final ItemStackAmount required = GroupRequirements.of(math);
         final GuiContainer terminal = underlyingContainer(gui);
 
         if (terminal != gui) {
@@ -100,12 +110,24 @@ public final class BookmarkActions {
         return true;
     }
 
+    /** @return what the hovered group needs, or only the hovered item when it is in no group. */
+    private static ItemStackAmount hoveredRequirements(int groupId) {
+        if (isUngroupedItemHovered()) {
+            final BookmarksGridSlot slot = hoveredSlot();
+            return GroupRequirements.ofItem(slot.getBookmarkItem(), slot.getMultiplier());
+        }
+
+        final RecipeChainMath math = ItemPanels.bookmarkPanel.getGrid()
+            .createRecipeChainMath(groupId);
+        return math == null ? null : GroupRequirements.of(math);
+    }
+
     /** The container a recipe page was opened from, or the GUI itself. */
     public static GuiContainer underlyingContainer(GuiContainer gui) {
         return gui instanceof GuiRecipe ? ((GuiRecipe<?>) gui).firstGui : gui;
     }
 
-    /** True when Alt+C would request crafts: a bookmark group is hovered and an AE2 terminal is behind the GUI. */
+    /** True when Alt+C would request crafts: a bookmark or group is hovered and an AE2 terminal is behind the GUI. */
     public static boolean canRequestGroupCrafts(GuiContainer gui) {
         return hoveredGroupId() >= 0 && TerminalStorage.isAvailable()
             && TerminalStorage.isTerminal(underlyingContainer(gui));

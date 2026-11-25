@@ -17,6 +17,7 @@ neibuildplanner.chat.craft_skipped=Skipped: %s
 neibuildplanner.chat.craft_failed=Could not start the craft requests (NEE changed?). See the log.
 
 neibuildplanner.hotkey.craft_group=Request AE2 crafts for this group
+neibuildplanner.hotkey.craft_item=Request AE2 craft for this item
 neibuildplanner.hotkey.add_bookmark=Add bookmark (keeps existing)
 neibuildplanner.hotkey.pull_partial=Pull all items, even if some are missing
 neibuildplanner.hotkey.pull_missing_partial=Pull missing items, even if some are missing

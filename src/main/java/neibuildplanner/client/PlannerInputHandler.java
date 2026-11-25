@@ -21,7 +21,8 @@ import neibuildplanner.client.planner.PreviewAccess;
  * <ul>
  * <li>Alt + bookmark key (A): add to bookmarks, never remove.</li>
  * <li>Alt + favorite key (F): toggle "preferred in multiblock previews".</li>
- * <li>Alt + craft key (C) over a bookmark group, in an AE2 terminal: request autocrafts for the group.</li>
+ * <li>Alt + craft key (C) over a bookmark group, in an AE2 terminal: request autocrafts for the group, or for
+ * just the hovered item when it is in no group.</li>
  * </ul>
  * Alt + pull key (V) is not handled here: NEI's pull ignores modifiers and {@code PullGuard} lets it through when Alt
  * is held. This class only adds its hint.
@@ -53,7 +54,11 @@ public class PlannerInputHandler implements IContainerInputHandler, IContainerTo
     @Override
     public Map<String, String> handleHotkeys(GuiContainer gui, int mousex, int mousey, Map<String, String> hotkeys) {
         if (BookmarkActions.canRequestGroupCrafts(gui)) {
-            hotkeys.put(altKeyName("gui.craft_items"), translate("neibuildplanner.hotkey.craft_group"));
+            hotkeys.put(
+                altKeyName("gui.craft_items"),
+                translate(
+                    BookmarkActions.isUngroupedItemHovered() ? "neibuildplanner.hotkey.craft_item"
+                        : "neibuildplanner.hotkey.craft_group"));
         }
 
         final ItemStack hovered = GuiContainerManager.getStackMouseOver(gui);
